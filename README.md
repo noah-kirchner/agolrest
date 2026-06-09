@@ -1,2 +1,2 @@
-# agol
-AGOL Map 1
+# agolrest
+AGOL Map 2

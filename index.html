@@ -121,9 +121,10 @@
     "esri/identity/IdentityManager",
     "esri/Graphic",
     "esri/layers/GraphicsLayer",
-    "esri/layers/FeatureLayer"
-  ], function(esriConfig, Map, MapView, Basemap, VectorTileLayer, BasemapGallery, Expand, Locate, Search, Zoom, esriId, Graphic, GraphicsLayer, FeatureLayer) {
-
+    "esri/layers/FeatureLayer",
+    "esri/widgets/Editor",
+    "esri/widgets/Legend"
+  ], function(esriConfig, Map, MapView, Basemap, VectorTileLayer, BasemapGallery, Expand, Locate, Search, Zoom, esriId, Graphic, GraphicsLayer, FeatureLayer, Editor, Legend) {
     esriConfig.apiKey = "AAPTahTxVFpq9q8MnwLiObY9CFA..GevNuz4SYr30TZAqUePx7AbFVJwzZ-75HZibp8q8X_hA6TPW8HykfyNv5UHSBrihV7wxRIuKMljM6Td7CGL-I-NoeohsNNN5-DscbLXxR160xjEKWljGwLKFTpbzjgKaCifG2LdFV6cjTrLyMfUN-QAwkcjGsxBAqrSoOkHtwm_Dp1Xq27w69mwKCTvvpkW7gCybTou8IRHbLRUoFRW1eICV-wSPJ2lBluUTLPvrOLmOa-qtmDDRDzd5yR7OMvH6f8I9I7fFzw..AT1_IMV5kkt8";
 
     esriId.registerToken({
@@ -405,6 +406,86 @@
 
     map.add(airportsLayer);
     map.add(heliportsLayer);
+
+    // --- FeatureLayer: My Visited Airports ---
+    // Data source: Custom feature layer created by Noah Kirchner on AGOL
+    // REST URL: https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/My_Airports_Kirchner/FeatureServer
+
+    // Challenge 1: Custom icon for visited airports
+    const myAirportRenderer = {
+      type: "simple",
+      symbol: {
+        type: "picture-marker",
+        url: "https://noah-kirchner.github.io/agolrest/images/airplane.png",
+        width: "24px",
+        height: "24px"
+      }
+    };
+
+    // Challenge 2: Label showing airport code
+    const myAirportLabels = {
+      symbol: {
+        type: "text",
+        color: "#FFFFFF",
+        haloColor: "#7FB77E",
+        haloSize: "2px",
+        font: {
+          size: "12px",
+          family: "Noto Sans",
+          style: "italic",
+          weight: "normal"
+        }
+      },
+      labelPlacement: "above-center",
+      labelExpressionInfo: {
+        expression: "$feature.AirportCode"
+      }
+    };
+
+    const myAirports = new FeatureLayer({
+      url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/My_Airports_Kirchner/FeatureServer",
+      outFields: ["AirportCode"],
+      renderer: myAirportRenderer,
+      labelingInfo: [myAirportLabels]
+    });
+
+    map.add(myAirports);
+
+    // Editor widget wrapped in Expand for clean UX
+    const editor = new Editor({
+      view: view,
+      layerInfos: [{
+        layer: myAirports
+      }]
+    });
+
+    const editorExpand = new Expand({
+      view: view,
+      content: editor,
+      expandIconClass: "esri-icon-edit",
+      expandTooltip: "Edit Features",
+      group: "primary",
+      container: document.createElement("div")
+    });
+
+    editorExpand.container.classList.add("basemap-expand");
+    view.ui.add(editorExpand, { position: "top-right", index: 3 });
+
+    // Challenge 3: Legend widget
+    const legend = new Legend({
+      view: view
+    });
+
+    const legendExpand = new Expand({
+      view: view,
+      content: legend,
+      expandIconClass: "esri-icon-legend",
+      expandTooltip: "Legend",
+      container: document.createElement("div")
+    });
+
+    legendExpand.container.classList.add("basemap-expand");
+    view.ui.add(legendExpand, { position: "top-right", index: 4 });
 
     // --- Widgets ---
 
